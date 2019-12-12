@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <title>1 Million Trees in the Brecon Beacons National Park</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+      integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+      integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+      crossorigin=""
+    ></script>
+
+    <script src="//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js"></script>
+
+    <style>
+      #mapid {
+        height: 500px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="mapid"></div>
+
+    <script type="module">
+      import LatLon from "https://cdn.jsdelivr.net/npm/geodesy@2.2.0/latlon-spherical.min.js";
+
+      // Create a map centred on Crickhowell
+      const map = L.map("mapid").setView([51.8597, -3.1372], 10);
+
+      // Use Open Street Map tiles
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      // Show Brecon Beacons National Park boundary
+      const bbnpLayer = omnivore
+        .kml("brecon_beacons_national_park_boundary.kml")
+        .on("ready", function() {
+          map.fitBounds(bbnpLayer.getBounds());
+        })
+        .addTo(map);
+
+      // Draw a square with area 1000 acres
+      const areaInSqKm = 4.04686;
+      const sideInM = Math.sqrt(areaInSqKm * 1000 * 1000);
+      const p1 = new LatLon(51.87479531230165, -3.1503295898437504); // point north of Crickhowell
+      const p2 = p1.destinationPoint(sideInM, 0);
+      const p3 = p2.destinationPoint(sideInM, 90);
+      const p4 = p1.destinationPoint(sideInM, 90);
+
+      const square = L.polygon(
+        [
+          [p1.lat, p1.lon],
+          [p2.lat, p2.lon],
+          [p3.lat, p3.lon],
+          [p4.lat, p4.lon]
+        ],
+        {
+          color: "green",
+          fillOpacity: 0.5
+        }
+      ).addTo(map);
+
+      const popup = L.popup()
+        .setLatLng(p2.midpointTo(p3))
+        .setContent("<p>Area needed to plant 1 million trees</p>")
+        .openOn(map);
+    </script>
+  </body>
+</html>
