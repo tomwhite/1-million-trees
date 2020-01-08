@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8" />
+    <title>1 Million Trees in the Brecon Beacons National Park</title>
+
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+      integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+      integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+      crossorigin=""
+    ></script>
+
+    <script src="//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js"></script>
+
+    <style>
+      #mapid {
+        height: 500px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="mapid"></div>
+
+    <script type="module">
+      import LatLon from "https://cdn.jsdelivr.net/npm/geodesy@2.2.0/latlon-spherical.min.js";
+
+      // These bounds were found by inspecting bbnpLayer.getBounds() from below
+      const bounds = [[51.702084424752776, -3.9895865479772916], [52.078310203734624, -2.9520696481307245]];
+
+      // Create a map of the Brecon Beacons National Park
+      const map = L.map("mapid").fitBounds(bounds);
+
+      // Use Open Street Map tiles
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      // Show Brecon Beacons National Park boundary
+      const bbnpLayer = omnivore
+        .kml("brecon_beacons_national_park_boundary.kml")
+        .on("ready", function() {
+          //map.fitBounds(bbnpLayer.getBounds());
+          bbnpLayer.setStyle({
+            color: '#3388ff',
+            opacity: '0.5',
+            fillOpacity: 0.1,
+            fillColor: '#3388ff'
+          });
+        })
+        .addTo(map);
+      
+
+      // Show planting areas
+      const plantingLayer = omnivore
+        .kml("planting_areas.kml")
+        .on("ready", function() {
+          //plantingLayer.bindPopup("Bryn Arw").openPopup();
+          plantingLayer.bindTooltip("Bryn Arw").openTooltip();
+          plantingLayer.setStyle({
+            color: 'green',
+            opacity: '0.9',
+            fillOpacity: 0.4,
+            fillColor: 'green'
+          });
+        })
+        .addTo(map);
+
+      // Area functions
+      const TREES_PER_HECTARE = 175000 / 75; // based on planting 175000 trees on 75 ha of Bryn Awr
+      const AREA_FOR_1M_TREES_IN_HA = 1000000 / TREES_PER_HECTARE;
+
+      function acresToSqKm(acres) {
+        return acres / 247;
+      }
+
+      function hectaresToSqKm(ha) {
+        return ha / 100;
+      }
+
+      function hectaresToSqM(ha) {
+        return 1000 * 1000 * ha / 100;
+      }
+
+      const AREA_PROMISED = 75; // Bryn Awr
+      const AREA_PROMISED_PCT = 100 * AREA_PROMISED / AREA_FOR_1M_TREES_IN_HA;
+
+      // Draw a rectangle with area for 1M trees
+      const areaInSqM = hectaresToSqM(AREA_FOR_1M_TREES_IN_HA);
+      const heightInM = Math.sqrt(areaInSqM / 10);
+      const widthInM = 10 * heightInM;
+      const p1 = new LatLon(51.83238306999667, -3.3319473266601567); // point in middle of BBNP
+      const p2 = p1.destinationPoint(heightInM, 0);
+      const p3 = p2.destinationPoint(widthInM, 90);
+      const p4 = p1.destinationPoint(widthInM, 90);
+
+      const square = L.polygon(
+        [
+          [p1.lat, p1.lon],
+          [p2.lat, p2.lon],
+          [p3.lat, p3.lon],
+          [p4.lat, p4.lon]
+        ],
+        {
+          color: "black",
+          opacity: 1,
+          weight: 1,
+          fillColor: "yellow",
+          fillOpacity: 0.9
+        }
+      ).addTo(map);
+
+      const promisedWidthInM = hectaresToSqM(AREA_PROMISED) / heightInM;
+      const p3dash = p2.destinationPoint(promisedWidthInM, 90);
+      const p4dash = p1.destinationPoint(promisedWidthInM, 90);
+      const square2 = L.polygon(
+        [
+          [p1.lat, p1.lon],
+          [p2.lat, p2.lon],
+          [p3dash.lat, p3dash.lon],
+          [p4dash.lat, p4dash.lon]
+        ],
+        {
+          color: "green",
+          opacity: 0,
+          fillOpacity: 0.9
+        }
+      ).addTo(map);
+
+      const popup = L.popup()
+        .setLatLng(p3dash)
+        .setContent("Land progress: " + AREA_PROMISED_PCT.toFixed(1) + "%")
+        .openOn(map);
+
+      // Uncomment to get lat long for point clicked on map
+      // map.on('click', function(ev){
+      //   var latlng = map.mouseEventToLatLng(ev.originalEvent);
+      //   console.log(latlng.lat + ', ' + latlng.lng);
+      // });
+    </script>
+  </body>
+</html>
