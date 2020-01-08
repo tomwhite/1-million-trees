@@ -32,8 +32,11 @@
     <script type="module">
       import LatLon from "https://cdn.jsdelivr.net/npm/geodesy@2.2.0/latlon-spherical.min.js";
 
-      // Create a map centred on Crickhowell
-      const map = L.map("mapid").setView([51.8597, -3.1372], 10);
+      // These bounds were found by inspecting bbnpLayer.getBounds() from below
+      const bounds = [[51.702084424752776, -3.9895865479772916], [52.078310203734624, -2.9520696481307245]];
+
+      // Create a map of the Brecon Beacons National Park
+      const map = L.map("mapid").fitBounds(bounds);
 
       // Use Open Street Map tiles
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -44,9 +47,9 @@
       // Show Brecon Beacons National Park boundary
       const bbnpLayer = omnivore
         .kml("brecon_beacons_national_park_boundary.kml")
-        .on("ready", function() {
-          map.fitBounds(bbnpLayer.getBounds());
-        })
+        // .on("ready", function() {
+        //   map.fitBounds(bbnpLayer.getBounds());
+        // })
         .addTo(map);
 
       // Draw a square with area 1000 acres
