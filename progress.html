@@ -3,7 +3,7 @@
   <head>
     <!-- Required meta tags -->
     <meta charset="utf-8" />
-    <title>1 Million Trees in the Brecon Beacons National Park</title>
+    <title>Stump Up For Trees</title>
 
     <link
       rel="stylesheet"
@@ -17,11 +17,49 @@
       crossorigin=""
     ></script>
 
-    <script src="//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-ajax/2.1.0/leaflet.ajax.min.js"></script>
+
+    <!-- https://github.com/torfsen/leaflet.zoomhome -->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="leaflet.zoomhome.css"/>
+    <script src="leaflet.zoomhome.min.js"></script>
 
     <style>
       #mapid {
-        height: 500px;
+        width: 800px;
+        height: 600px;
+      }
+      .tree-scale {
+        font-size: 11px;
+      }
+      .tree-scale-box {
+        border: 2px solid #777;
+        background: #fff;
+      	background: rgba(255, 255, 255, 0.5);
+      }
+      .tree-scale-progress {
+        font: 14px/16px Arial, Helvetica, sans-serif;
+        display: table-cell;
+        vertical-align: middle;
+        background: green;
+        background: rgba(0, 128, 0, 0.4);
+      }
+      .tree-scale-text {
+        background: #fff;
+      	background: rgba(255, 255, 255, 0.5);
+        display: inline;
+      }
+      .info {
+          padding: 6px 8px;
+          font: 14px/16px Arial, Helvetica, sans-serif;
+          background: white;
+          background: rgba(255,255,255,0.8);
+          box-shadow: 0 0 15px rgba(0,0,0,0.2);
+          border-radius: 5px;
+      }
+      .info h4 {
+          margin: 0 0 5px;
+          color: #777;
       }
     </style>
   </head>
@@ -31,48 +69,6 @@
 
     <script type="module">
       import LatLon from "https://cdn.jsdelivr.net/npm/geodesy@2.2.0/latlon-spherical.min.js";
-
-      // These bounds were found by inspecting bbnpLayer.getBounds() from below
-      const bounds = [[51.702084424752776, -3.9895865479772916], [52.078310203734624, -2.9520696481307245]];
-
-      // Create a map of the Brecon Beacons National Park
-      const map = L.map("mapid").fitBounds(bounds);
-
-      // Use Open Street Map tiles
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(map);
-
-      // Show Brecon Beacons National Park boundary
-      const bbnpLayer = omnivore
-        .kml("brecon_beacons_national_park_boundary.kml")
-        .on("ready", function() {
-          //map.fitBounds(bbnpLayer.getBounds());
-          bbnpLayer.setStyle({
-            color: '#3388ff',
-            opacity: '0.5',
-            fillOpacity: 0.1,
-            fillColor: '#3388ff'
-          });
-        })
-        .addTo(map);
-      
-
-      // Show planting areas
-      const plantingLayer = omnivore
-        .kml("planting_areas.kml")
-        .on("ready", function() {
-          //plantingLayer.bindPopup("Bryn Arw").openPopup();
-          plantingLayer.bindTooltip("Bryn Arw").openTooltip();
-          plantingLayer.setStyle({
-            color: 'green',
-            opacity: '0.9',
-            fillOpacity: 0.4,
-            fillColor: 'green'
-          });
-        })
-        .addTo(map);
 
       // Area functions
       const TREES_PER_HECTARE = 175000 / 75; // based on planting 175000 trees on 75 ha of Bryn Awr
@@ -90,60 +86,129 @@
         return 1000 * 1000 * ha / 100;
       }
 
-      const AREA_PROMISED = 75; // Bryn Awr
-      const AREA_PROMISED_PCT = 100 * AREA_PROMISED / AREA_FOR_1M_TREES_IN_HA;
+      function hectaresToAcres(ha) {
+        return ha * 2.471;
+      }
 
-      // Draw a rectangle with area for 1M trees
+      // Calculate a rectangle with area for 1M trees
       const areaInSqM = hectaresToSqM(AREA_FOR_1M_TREES_IN_HA);
       const heightInM = Math.sqrt(areaInSqM / 10);
       const widthInM = 10 * heightInM;
-      const p1 = new LatLon(51.83238306999667, -3.3319473266601567); // point in middle of BBNP
-      const p2 = p1.destinationPoint(heightInM, 0);
-      const p3 = p2.destinationPoint(widthInM, 90);
-      const p4 = p1.destinationPoint(widthInM, 90);
 
-      const square = L.polygon(
-        [
-          [p1.lat, p1.lon],
-          [p2.lat, p2.lon],
-          [p3.lat, p3.lon],
-          [p4.lat, p4.lon]
-        ],
-        {
-          color: "black",
-          opacity: 1,
-          weight: 1,
-          fillColor: "yellow",
-          fillOpacity: 0.9
-        }
-      ).addTo(map);
+      // These bounds were found by inspecting bbnpLayer.getBounds() from below, or by choosing one by eye
+      const bbnpBounds = [[51.702084424752776, -3.9895865479772916], [52.078310203734624, -2.9520696481307245]];
+      const extentBounds = [[51.85195384722623, -3.127506680893053], [51.8875385405915, -3.006924188253357]];
+      const bounds = [[51.80606740275158, -3.204574584960938], [51.93325857832681, -2.9299163818359375]];
 
-      const promisedWidthInM = hectaresToSqM(AREA_PROMISED) / heightInM;
-      const p3dash = p2.destinationPoint(promisedWidthInM, 90);
-      const p4dash = p1.destinationPoint(promisedWidthInM, 90);
-      const square2 = L.polygon(
-        [
-          [p1.lat, p1.lon],
-          [p2.lat, p2.lon],
-          [p3dash.lat, p3dash.lon],
-          [p4dash.lat, p4dash.lon]
-        ],
-        {
-          color: "green",
-          opacity: 0,
-          fillOpacity: 0.9
-        }
-      ).addTo(map);
+      // Create a map
+      const map = L.map("mapid", {zoomControl: false}).fitBounds(bounds);
 
-      const popup = L.popup()
-        .setLatLng(p3dash)
-        .setContent("Land progress: " + AREA_PROMISED_PCT.toFixed(1) + "%")
-        .openOn(map);
+      // Add a home button to reset map
+      var zoomHome = L.Control.zoomHome();
+      zoomHome.addTo(map);
+
+      // Use Open Street Map tiles
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      // Show Brecon Beacons National Park boundary
+
+      // var bbnpLayer = new L.GeoJSON.AJAX("data/brecon_beacons_national_park_boundary_simplified.json", {
+      //     style: {
+      //       color: '#3388ff',
+      //       opacity: '0.5',
+      //       fillOpacity: 0.1,
+      //       fillColor: '#3388ff'
+      //     }
+      //   })
+      //   .on("data:loaded", function() {
+      //     //map.fitBounds(bbnpLayer.getBounds());
+      //   })
+      //   .addTo(map);
+
+      // Show planting areas
+
+      const plantingAreaStyle = {
+            color: 'green',
+            opacity: 0.9,
+            fillOpacity: 0.4
+      };
+
+      let totalLandPercent = 19.7; // TODO calculate after json loaded
+      const plantingLayer = new L.GeoJSON.AJAX("data/planting_areas.geojson", {style: plantingAreaStyle})
+        .on("data:loaded", function(data) {
+          //console.log(plantingLayer.getBounds());
+        })
+        .bindPopup(layer => {
+          const props = layer.feature.properties;
+          const area_ac = hectaresToAcres(props.area_ha);
+          const num_trees = Math.round(TREES_PER_HECTARE * props.area_ha / 1000) * 1000; // round to nearest 1000
+          const pct = 100 * props.area_ha / AREA_FOR_1M_TREES_IN_HA;
+          const notes = props.notes == null ? '' : props.notes;
+          return `<b>${props.name}</b>: ${props.area_ha.toFixed(0)} ha, ${area_ac.toFixed(0)} ac, ${num_trees} trees, ${pct.toFixed(1)}%<br/>${notes}`;
+        })
+        .addTo(map);
+
+      // A new control that shows the area of 1M trees
+      // Uses Leaflet's Scale control for inspiration (https://github.com/Leaflet/Leaflet/blob/master/src/control/Control.Scale.js)
+
+      const TreeScale = L.Control.extend({
+        onAdd: function (map) {
+          const className = 'tree-scale',
+              container = L.DomUtil.create('div', className);
+          this._treeScaleBox = L.DomUtil.create('div', className + '-box', container);
+          this._treeScaleProgress = L.DomUtil.create('div', className + '-progress', this._treeScaleBox);
+          this._treeScaleText = L.DomUtil.create('div', className + '-text', container);
+
+          map.on('move', this._update, this);
+          map.whenReady(this._update, this);
+
+          return container;
+        },
+        _update: function () {
+          const map = this._map;
+          const mapBounds = map.getBounds();
+          const pixelBounds = map.getPixelBounds();
+          const mapWidthInM = map.distance(mapBounds.getSouthWest(), mapBounds.getSouthEast());
+          const mapWidthInPixels = pixelBounds.max.x - pixelBounds.min.x;
+
+          const widthInPixels = Math.round(widthInM * mapWidthInPixels / mapWidthInM);
+          const heightInPixels = Math.round(0.1 * widthInM * mapWidthInPixels / mapWidthInM);
+
+          const progressWidthInPixels = Math.round((totalLandPercent / 100.0) * widthInM * mapWidthInPixels / mapWidthInM);
+
+          this._treeScaleBox.style.width = widthInPixels + 'px';
+          this._treeScaleBox.style.height = heightInPixels + 'px';
+          this._treeScaleProgress.style.width = progressWidthInPixels + 'px';
+          this._treeScaleProgress.style.height = heightInPixels + 'px';
+          this._treeScaleProgress.innerHTML = heightInPixels >= 14 ? totalLandPercent.toFixed(1)  + "%" : '';
+          this._treeScaleText.innerHTML = '1 million trees';
+        },
+      });
+      new TreeScale({ position: 'bottomleft' }).addTo(map);
+
+      // Add an info control
+      var info = L.control({position: 'topright'});
+
+      info.onAdd = function (map) {
+          this._div = L.DomUtil.create('div', 'info');
+          this.update();
+          return this._div;
+      };
+
+      info.update = function (props) {
+          this._div.innerHTML = '<h4>Stump Up For Trees</h4> Click on a planting area';
+      };
+
+      info.addTo(map);
 
       // Uncomment to get lat long for point clicked on map
       // map.on('click', function(ev){
       //   var latlng = map.mouseEventToLatLng(ev.originalEvent);
       //   console.log(latlng.lat + ', ' + latlng.lng);
+      //   console.log(map.getBounds());
       // });
     </script>
   </body>
