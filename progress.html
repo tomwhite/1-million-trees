@@ -136,10 +136,14 @@
             fillOpacity: 0.4
       };
 
-      let totalLandPercent = 19.7; // TODO calculate after json loaded
       const plantingLayer = new L.GeoJSON.AJAX("data/planting_areas.geojson", {style: plantingAreaStyle})
         .on("data:loaded", function(data) {
-          //console.log(plantingLayer.getBounds());
+          let totalHa = 0;
+          for (let key in plantingLayer._layers){
+            totalHa += plantingLayer._layers[key].feature.properties.area_ha;
+          }
+          const pct = 100 * totalHa / AREA_FOR_1M_TREES_IN_HA;
+          new TreeScale({ position: 'bottomleft', progress: pct }).addTo(map);
         })
         .bindPopup(layer => {
           const props = layer.feature.properties;
@@ -155,9 +159,14 @@
       // Uses Leaflet's Scale control for inspiration (https://github.com/Leaflet/Leaflet/blob/master/src/control/Control.Scale.js)
 
       const TreeScale = L.Control.extend({
+        options: {
+          position: 'bottomleft',
+		      progress: 0
+        },
         onAdd: function (map) {
           const className = 'tree-scale',
-              container = L.DomUtil.create('div', className);
+              container = L.DomUtil.create('div', className),
+              options = this.options;
           this._treeScaleBox = L.DomUtil.create('div', className + '-box', container);
           this._treeScaleProgress = L.DomUtil.create('div', className + '-progress', this._treeScaleBox);
           this._treeScaleText = L.DomUtil.create('div', className + '-text', container);
@@ -177,17 +186,16 @@
           const widthInPixels = Math.round(widthInM * mapWidthInPixels / mapWidthInM);
           const heightInPixels = Math.round(0.1 * widthInM * mapWidthInPixels / mapWidthInM);
 
-          const progressWidthInPixels = Math.round((totalLandPercent / 100.0) * widthInM * mapWidthInPixels / mapWidthInM);
+          const progressWidthInPixels = Math.round((this.options.progress / 100.0) * widthInM * mapWidthInPixels / mapWidthInM);
 
           this._treeScaleBox.style.width = widthInPixels + 'px';
           this._treeScaleBox.style.height = heightInPixels + 'px';
           this._treeScaleProgress.style.width = progressWidthInPixels + 'px';
           this._treeScaleProgress.style.height = heightInPixels + 'px';
-          this._treeScaleProgress.innerHTML = heightInPixels >= 14 ? totalLandPercent.toFixed(1)  + "%" : '';
+          this._treeScaleProgress.innerHTML = heightInPixels >= 14 ? this.options.progress.toFixed(1)  + "%" : '';
           this._treeScaleText.innerHTML = '1 million trees';
         },
       });
-      new TreeScale({ position: 'bottomleft' }).addTo(map);
 
       // Add an info control
       var info = L.control({position: 'topright'});
