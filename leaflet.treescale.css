@@ -1,0 +1,20 @@
+.tree-scale {
+  font-size: 11px;
+}
+.tree-scale-box {
+  border: 2px solid #777;
+  background: #fff;
+  background: rgba(255, 255, 255, 0.5);
+}
+.tree-scale-progress {
+  font: 14px/16px Arial, Helvetica, sans-serif;
+  display: table-cell;
+  vertical-align: middle;
+  background: green;
+  background: rgba(0, 128, 0, 0.4);
+}
+.tree-scale-text {
+  background: #fff;
+  background: rgba(255, 255, 255, 0.5);
+  display: inline;
+}

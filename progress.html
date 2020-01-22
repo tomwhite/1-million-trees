@@ -24,30 +24,14 @@
     <link rel="stylesheet" href="leaflet.zoomhome.css"/>
     <script src="leaflet.zoomhome.min.js"></script>
 
+    <!-- Tree Scale -->
+    <link rel="stylesheet" href="leaflet.treescale.css"/>
+    <script src="leaflet.treescale.js"></script>
+
     <style>
       #mapid {
         width: 800px;
         height: 600px;
-      }
-      .tree-scale {
-        font-size: 11px;
-      }
-      .tree-scale-box {
-        border: 2px solid #777;
-        background: #fff;
-      	background: rgba(255, 255, 255, 0.5);
-      }
-      .tree-scale-progress {
-        font: 14px/16px Arial, Helvetica, sans-serif;
-        display: table-cell;
-        vertical-align: middle;
-        background: green;
-        background: rgba(0, 128, 0, 0.4);
-      }
-      .tree-scale-text {
-        background: #fff;
-      	background: rgba(255, 255, 255, 0.5);
-        display: inline;
       }
       .info {
           padding: 6px 8px;
@@ -67,9 +51,7 @@
   <body>
     <div id="mapid"></div>
 
-    <script type="module">
-      import LatLon from "https://cdn.jsdelivr.net/npm/geodesy@2.2.0/latlon-spherical.min.js";
-
+    <script>
       // Area functions
       const TREES_PER_HECTARE = 175000 / 75; // based on planting 175000 trees on 75 ha of Bryn Awr
       const AREA_FOR_1M_TREES_IN_HA = 1000000 / TREES_PER_HECTARE;
@@ -89,11 +71,6 @@
       function hectaresToAcres(ha) {
         return ha * 2.471;
       }
-
-      // Calculate a rectangle with area for 1M trees
-      const areaInSqM = hectaresToSqM(AREA_FOR_1M_TREES_IN_HA);
-      const heightInM = Math.sqrt(areaInSqM / 10);
-      const widthInM = 10 * heightInM;
 
       // These bounds were found by inspecting bbnpLayer.getBounds() from below, or by choosing one by eye
       const bbnpBounds = [[51.702084424752776, -3.9895865479772916], [52.078310203734624, -2.9520696481307245]];
@@ -143,7 +120,11 @@
             totalHa += plantingLayer._layers[key].feature.properties.area_ha;
           }
           const pct = 100 * totalHa / AREA_FOR_1M_TREES_IN_HA;
-          new TreeScale({ position: 'bottomleft', progress: pct }).addTo(map);
+          new TreeScale({
+            position: 'bottomleft',
+            treesPerHectare: TREES_PER_HECTARE,
+            progress: pct
+          }).addTo(map);
         })
         .bindPopup(layer => {
           const props = layer.feature.properties;
@@ -154,48 +135,6 @@
           return `<b>${props.name}</b>: ${props.area_ha.toFixed(0)} ha, ${area_ac.toFixed(0)} ac, ${num_trees} trees, ${pct.toFixed(1)}%<br/>${notes}`;
         })
         .addTo(map);
-
-      // A new control that shows the area of 1M trees
-      // Uses Leaflet's Scale control for inspiration (https://github.com/Leaflet/Leaflet/blob/master/src/control/Control.Scale.js)
-
-      const TreeScale = L.Control.extend({
-        options: {
-          position: 'bottomleft',
-		      progress: 0
-        },
-        onAdd: function (map) {
-          const className = 'tree-scale',
-              container = L.DomUtil.create('div', className),
-              options = this.options;
-          this._treeScaleBox = L.DomUtil.create('div', className + '-box', container);
-          this._treeScaleProgress = L.DomUtil.create('div', className + '-progress', this._treeScaleBox);
-          this._treeScaleText = L.DomUtil.create('div', className + '-text', container);
-
-          map.on('move', this._update, this);
-          map.whenReady(this._update, this);
-
-          return container;
-        },
-        _update: function () {
-          const map = this._map;
-          const mapBounds = map.getBounds();
-          const pixelBounds = map.getPixelBounds();
-          const mapWidthInM = map.distance(mapBounds.getSouthWest(), mapBounds.getSouthEast());
-          const mapWidthInPixels = pixelBounds.max.x - pixelBounds.min.x;
-
-          const widthInPixels = Math.round(widthInM * mapWidthInPixels / mapWidthInM);
-          const heightInPixels = Math.round(0.1 * widthInM * mapWidthInPixels / mapWidthInM);
-
-          const progressWidthInPixels = Math.round((this.options.progress / 100.0) * widthInM * mapWidthInPixels / mapWidthInM);
-
-          this._treeScaleBox.style.width = widthInPixels + 'px';
-          this._treeScaleBox.style.height = heightInPixels + 'px';
-          this._treeScaleProgress.style.width = progressWidthInPixels + 'px';
-          this._treeScaleProgress.style.height = heightInPixels + 'px';
-          this._treeScaleProgress.innerHTML = heightInPixels >= 14 ? this.options.progress.toFixed(1)  + "%" : '';
-          this._treeScaleText.innerHTML = '1 million trees';
-        },
-      });
 
       // Add an info control
       var info = L.control({position: 'topright'});
