@@ -1,6 +1,7 @@
 .tree-scale {
   text-align: left;
   font-size: 11px;
+  pointer-events: none;
 }
 .tree-scale-box {
   border: 2px solid #777;
