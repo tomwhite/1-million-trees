@@ -14,6 +14,7 @@ TreeScale = L.Control.extend({
         const className = 'tree-scale',
             container = L.DomUtil.create('div', className),
             options = this.options;
+        this._treeScale = container;
         this._treeScaleBox = L.DomUtil.create('div', className + '-box', container);
         this._treeScaleProgress = L.DomUtil.create('div', className + '-progress', this._treeScaleBox);
         this._treeScaleText = L.DomUtil.create('div', className + '-text', container);
@@ -35,6 +36,12 @@ TreeScale = L.Control.extend({
 
         const widthInPixels = Math.round(widthInM * mapWidthInPixels / mapWidthInM);
         const heightInPixels = Math.round(this.options.heightRatio * widthInM * mapWidthInPixels / mapWidthInM);
+
+        if (widthInPixels > mapWidthInPixels) {
+            this._treeScale.style.display = 'none';
+        } else {
+            this._treeScale.style.display = '';
+        }
 
         this._treeScaleBox.style.width = widthInPixels + 'px';
         this._treeScaleBox.style.height = heightInPixels + 'px';
