@@ -1,82 +1,118 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <!-- Required meta tags -->
-    <meta charset="utf-8" />
-    <title>1 Million Trees in the Brecon Beacons National Park</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>STUMP UP for TREES</title>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
     <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
-      integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-      crossorigin=""
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+        integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+        crossorigin=""
     />
     <script
-      src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
-      integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
-      crossorigin=""
+        src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+        integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+        crossorigin=""
     ></script>
 
     <script src="//api.tiles.mapbox.com/mapbox.js/plugins/leaflet-omnivore/v0.3.1/leaflet-omnivore.min.js"></script>
 
+    <link rel="stylesheet" href="suft.css"/>
     <style>
-      #mapid {
-        height: 500px;
-      }
+        #mapid {
+            height: 450px;
+        }
     </style>
   </head>
-
   <body>
-    <div id="mapid"></div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">
+            <img src="suft-logo.png" width="32" height="32" class="d-inline-block align-top" alt="">
+            STUMP UP for TREES
+        </a>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
+            <div class="navbar-nav">
+              <a class="nav-item nav-link active" href="/">About</a>
+              <a class="nav-item nav-link" href="bryn-arw.html">Bryn Arw</a>
+              <a class="nav-item nav-link" href="https://www.facebook.com/STUMP-UP-for-TREES-To-plant-a-million-trees-in-the-Brecon-Beacons-101784761316376/">News (Facebook)</a>
+              <form class="form-inline">
+                <button class="btn btn-outline-success" type="button">Donate</button>
+              </form>
+            </div>
+          </div>
+    </nav>
+
+    <div class="px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center suft-header">
+        <h1 class="display-4">STUMP UP for TREES</h1>
+        <h2 class="display-8">To plant a million trees in the Brecon Beacons</h2>
+        <p class="lead">How much land is needed for one million trees? It's probably not as much as you might think.
+            It works out at about 1000 acres, or the size of the green square on the map below.</p>
+    </div>
+
+    <div class="container text-center">
+        <div id="mapid"></div>
+    </div>
+
+    <div class="container text-center py-3">
+      <p>[More information about the project.]</p>
+      &copy; 2020 STUMP UP for TREES
+    </div>
 
     <script type="module">
-      import LatLon from "https://cdn.jsdelivr.net/npm/geodesy@2.2.0/latlon-spherical.min.js";
-
-      // These bounds were found by inspecting bbnpLayer.getBounds() from below
-      const bounds = [[51.702084424752776, -3.9895865479772916], [52.078310203734624, -2.9520696481307245]];
-
-      // Create a map of the Brecon Beacons National Park
-      const map = L.map("mapid").fitBounds(bounds);
-
-      // Use Open Street Map tiles
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(map);
-
-      // Show Brecon Beacons National Park boundary
-      const bbnpLayer = omnivore
-        .kml("brecon_beacons_national_park_boundary.kml")
-        // .on("ready", function() {
-        //   map.fitBounds(bbnpLayer.getBounds());
-        // })
-        .addTo(map);
-
-      // Draw a square with area 1000 acres
-      const areaInSqKm = 4.04686;
-      const sideInM = Math.sqrt(areaInSqKm * 1000 * 1000);
-      const p1 = new LatLon(51.87479531230165, -3.1503295898437504); // point north of Crickhowell
-      const p2 = p1.destinationPoint(sideInM, 0);
-      const p3 = p2.destinationPoint(sideInM, 90);
-      const p4 = p1.destinationPoint(sideInM, 90);
-
-      const square = L.polygon(
-        [
-          [p1.lat, p1.lon],
-          [p2.lat, p2.lon],
-          [p3.lat, p3.lon],
-          [p4.lat, p4.lon]
-        ],
-        {
-          color: "green",
-          fillOpacity: 0.5
-        }
-      ).addTo(map);
-
-      const popup = L.popup()
-        .setLatLng(p2.midpointTo(p3))
-        .setContent("<p>Area needed to plant 1 million trees</p>")
-        .openOn(map);
-    </script>
+        import LatLon from "https://cdn.jsdelivr.net/npm/geodesy@2.2.0/latlon-spherical.min.js";
+  
+        // These bounds were found by inspecting bbnpLayer.getBounds() from below
+        const bounds = [[51.702084424752776, -3.9895865479772916], [52.078310203734624, -2.9520696481307245]];
+  
+        // Create a map of the Brecon Beacons National Park
+        const map = L.map("mapid").fitBounds(bounds);
+  
+        // Use Open Street Map tiles
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+  
+        // Show Brecon Beacons National Park boundary
+        const bbnpLayer = omnivore
+          .kml("brecon_beacons_national_park_boundary.kml")
+          // .on("ready", function() {
+          //   map.fitBounds(bbnpLayer.getBounds());
+          // })
+          .addTo(map);
+  
+        // Draw a square with area 1000 acres
+        const areaInSqKm = 4.04686;
+        const sideInM = Math.sqrt(areaInSqKm * 1000 * 1000);
+        const p1 = new LatLon(51.87479531230165, -3.1503295898437504); // point north of Crickhowell
+        const p2 = p1.destinationPoint(sideInM, 0);
+        const p3 = p2.destinationPoint(sideInM, 90);
+        const p4 = p1.destinationPoint(sideInM, 90);
+  
+        const square = L.polygon(
+          [
+            [p1.lat, p1.lon],
+            [p2.lat, p2.lon],
+            [p3.lat, p3.lon],
+            [p4.lat, p4.lon]
+          ],
+          {
+            color: "green",
+            fillOpacity: 0.5
+          }
+        ).addTo(map);
+  
+        const popup = L.popup()
+          .setLatLng(p2.midpointTo(p3))
+          .setContent("<p>Area needed to plant 1 million trees</p>")
+          .openOn(map);
+      </script>
+    
   </body>
 </html>
