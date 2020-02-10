@@ -7,7 +7,7 @@ TreeScale = L.Control.extend({
         numTrees: 1000000,
         treesPerHectare: (175000 / 75),
         heightRatio: 0.1,
-        progress: 0,
+        progress: null,
         text: '1 million trees'
     },
     onAdd: function (map) {
@@ -36,14 +36,20 @@ TreeScale = L.Control.extend({
         const widthInPixels = Math.round(widthInM * mapWidthInPixels / mapWidthInM);
         const heightInPixels = Math.round(this.options.heightRatio * widthInM * mapWidthInPixels / mapWidthInM);
 
-        const progressWidthInPixels = Math.round((this.options.progress / 100.0) * widthInM * mapWidthInPixels / mapWidthInM);
-
         this._treeScaleBox.style.width = widthInPixels + 'px';
         this._treeScaleBox.style.height = heightInPixels + 'px';
-        this._treeScaleProgress.style.width = progressWidthInPixels + 'px';
-        this._treeScaleProgress.style.height = heightInPixels + 'px';
-        this._treeScaleProgress.innerHTML = heightInPixels >= 14 ? this.options.progress.toFixed(1)  + "%" : '';
+
         this._treeScaleText.innerHTML = this.options.text;
+
+        if (this.options.progress == null) { // don't show progress
+            this._treeScaleProgress.style.display = 'none';
+        } else {
+            const progressWidthInPixels = Math.round((this.options.progress / 100.0) * widthInM * mapWidthInPixels / mapWidthInM);
+            this._treeScaleProgress.style.display = 'table-cell';
+            this._treeScaleProgress.style.width = progressWidthInPixels + 'px';
+            this._treeScaleProgress.style.height = heightInPixels + 'px';
+            this._treeScaleProgress.innerHTML = heightInPixels >= 14 ? this.options.progress.toFixed(1)  + "%" : '';    
+        }
     },
 });
 

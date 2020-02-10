@@ -124,8 +124,7 @@
           const pct = 100 * totalHa / AREA_FOR_1M_TREES_IN_HA;
           new TreeScale({
             position: 'bottomleft',
-            treesPerHectare: TREES_PER_HECTARE,
-            progress: 0
+            treesPerHectare: TREES_PER_HECTARE
           }).addTo(map);
         })
         .bindPopup(layer => {
